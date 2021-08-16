@@ -1,43 +1,103 @@
-const messageList = document.querySelector("ul")
-const nickNameForm = document.querySelector("#nickNameForm");
-const messageForm = document.querySelector("#sendMessageForm");
-const socket = new WebSocket(`ws://${window.location.host}`);
+const socket = io();
 
-function textObjToString(type, payload) {
-    const msg = { type, payload }
-    return JSON.stringify(msg);
-}
+const welcome = document.getElementById("welcome");
+const form = welcome.querySelector("form");
+const room = document.getElementById("room");
+const firstScreen = document.getElementById("firstScreen");
+const nav = document.getElementById("nav");
+const nameForm = firstScreen.querySelector("#name");
+const callNickChangeBtn = document.getElementById("callNickChangeBtn");
+const nickChangeBtn = document.getElementById("nickChangeBtn");
 
-socket.addEventListener("open", () => {
-    console.log("Connected to server😜");
-});
+room.hidden = true;
+welcome.hidden = true;
 
-socket.addEventListener("message", (message) => {
+let roomName;
+
+//화면에 매세지 li로 출력
+function addMessage(message) {
+    const ul = room.querySelector("ul");
     const li = document.createElement("li");
-    li.innerText = message.data;
-    messageList.append(li);
-});
+    li.innerText = message;
+    ul.appendChild(li);
+}
 
-socket.addEventListener("close", () => {
-    console.log("Disconnected to server😜");
-});
-
-
-//메세지 보내기
-function handleMessageSubmit(event){
+//메세지 제출시
+function handleMessageSubmit(event) {
     event.preventDefault();
-    const input = messageForm.querySelector("input");
-    socket.send(textObjToString("new_message", input.value));
+    const input = room.querySelector("#msg input");
+    const value = input.value;
+    socket.emit("new_message", input.value, roomName, () => {
+        addMessage(`You: ${value}`);
+    });
     input.value = "";
 }
 
-//닉네임 바꾸기
-function handleNickSubmit(event) {
+//닉네임 제출시
+function firstNicknameSubmit(event) {
     event.preventDefault();
-    const input = nickNameForm.querySelector("input");
-    socket.send(textObjToString("nickname", input.value));
+    const input = firstScreen.querySelector("#name input");
+    socket.emit("nickname", input.value);
+    input.value = "";
+    firstScreen.hidden = true;
+    welcome.hidden = false;
+}
+
+function anytimeNicknameSubmit(event) {
+    event.preventDefault();
+    const input = nav.querySelector("#name2 input");
+    socket.emit("nickname", input.value);
     input.value = "";
 }
 
-messageForm.addEventListener("submit", handleMessageSubmit);
-nickNameForm.addEventListener("submit", handleNickSubmit);
+//방 진입시
+function showRoom() {
+    welcome.hidden = true;
+    room.hidden = false;
+    const roomTitle = room.querySelector("h3");
+    roomTitle.innerText = `Room: ${roomName}`;
+    const msgForm = room.querySelector("#msg");
+    msgForm.addEventListener("submit", handleMessageSubmit);
+    callNickChangeBtn.classList.remove("hidden");
+}
+
+//방 이름 제출시
+function handleRoomSubmit(event) {
+    event.preventDefault();
+    const input = form.querySelector("input");
+    socket.emit("enter_room", input.value, showRoom);
+    roomName = input.value;
+    input.value = "";
+}
+
+nameForm.addEventListener("submit", firstNicknameSubmit);
+form.addEventListener("submit", handleRoomSubmit);
+
+//유저 들어왔을때 출력메세지
+socket.on("welcomeMessage", (user) => {
+    addMessage(`${user} arrived!`);
+});
+
+//유저 나갔을때 출력메세지
+socket.on("bye", (user) => {
+    addMessage(`${user} left T.T`);
+});
+
+//새로운 메시지 서버에 보냄
+socket.on("new_message", addMessage);
+
+
+
+
+
+
+
+//닉네임 변경
+
+function ChangeNickBtnToggle() {
+    const form = document.querySelector("#nav form");
+    form.classList.toggle("hidden");
+}
+
+callNickChangeBtn.addEventListener("click", ChangeNickBtnToggle);
+nickChangeBtn.addEventListener("click", anytimeNicknameSubmit);
