@@ -22,6 +22,8 @@ html(lang="en")
             form
                 input(placeholder="room name", required, type="text" maxlength="10")
                 button Enter Room
+            h4 Open Rooms:
+            ul
         div#room
             h3
             ul
@@ -36,4 +38,6 @@ html(lang="en")
                 
             
     script(src="/socket.io/socket.io.js")
-    script(src="/public/js/app.js") 
+    script(src="/public/js/app.js")
+    script(src="https://www.gstatic.com/firebasejs/8.9.1/firebase-app.js")
+    script(src="https://www.gstatic.com/firebasejs/8.9.1/firebase-analytics.js")

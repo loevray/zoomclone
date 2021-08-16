@@ -50,6 +50,16 @@ function anytimeNicknameSubmit(event) {
     input.value = "";
 }
 
+//닉네임 변경
+
+function ChangeNickBtnToggle() {
+    const form = document.querySelector("#nav form");
+    form.classList.toggle("hidden");
+}
+
+callNickChangeBtn.addEventListener("click", ChangeNickBtnToggle);
+nickChangeBtn.addEventListener("click", anytimeNicknameSubmit);
+
 //방 진입시
 function showRoom() {
     welcome.hidden = true;
@@ -74,30 +84,35 @@ nameForm.addEventListener("submit", firstNicknameSubmit);
 form.addEventListener("submit", handleRoomSubmit);
 
 //유저 들어왔을때 출력메세지
-socket.on("welcomeMessage", (user) => {
+socket.on("welcomeMessage", (user, newCount) => {
+    const roomTitle = room.querySelector("h3");
+    roomTitle.innerText = `Room: ${roomName} (${newCount})`;
     addMessage(`${user} arrived!`);
 });
 
 //유저 나갔을때 출력메세지
-socket.on("bye", (user) => {
+socket.on("bye", (user, newCount) => {
+    const roomTitle = room.querySelector("h3");
+    roomTitle.innerText = `Room: ${roomName} (${newCount})`;
     addMessage(`${user} left T.T`);
 });
 
 //새로운 메시지 서버에 보냄
 socket.on("new_message", addMessage);
 
+//방 목록 표기
+socket.on("room_change", (rooms) => {
+    const roomList = welcome.querySelector("ul");
+    roomList.innerHTML = "";
+    if(rooms.length === 0) {
+        return;
+    }
+    rooms.forEach(room => {
+        const li = document.createElement("li");
+        li.innerText = room;
+        roomList.append(li);
+    });
+});
 
 
 
-
-
-
-//닉네임 변경
-
-function ChangeNickBtnToggle() {
-    const form = document.querySelector("#nav form");
-    form.classList.toggle("hidden");
-}
-
-callNickChangeBtn.addEventListener("click", ChangeNickBtnToggle);
-nickChangeBtn.addEventListener("click", anytimeNicknameSubmit);
